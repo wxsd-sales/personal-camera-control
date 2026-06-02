@@ -81,13 +81,37 @@ Personal-mode devices do not report an active SpeakerTrack state the same way sh
 ### Application flow
 
 ```mermaid
-flowchart LR
-  A[Static web app] -->|OAuth implicit| B[Webex Identity]
-  B -->|access_token in hash| A
-  A -->|Bearer token| C[Webex REST API]
-  C -->|xAPI status| D[RoomOS device]
-  C -->|xAPI commands| D
-  A -->|render UI| A
+sequenceDiagram
+  actor User
+  participant App as This Web App
+  participant Identity as Webex Identity
+  participant API as Webex REST API
+  participant Device as RoomOS device
+
+  User->>App: Open app
+  User->>App: Sign in with Webex
+  App->>Identity: OAuth authorize (implicit)
+  Identity->>User: Approve scopes
+  Identity->>App: Redirect with access_token (hash)
+
+  App->>API: GET /devices (Bearer token)
+  API-->>App: Personal devices (xAPI capable)
+
+  User->>App: Select device
+  App->>API: POST /xapi/status
+  API->>Device: Query cameras, video, selfview
+  Device-->>API: Status
+  API-->>App: Status response
+  App-->>User: Render controls
+
+  User->>App: Camera / selfview command
+  App->>API: POST /xapi/command
+  API->>Device: Execute command
+  Device-->>API: Result
+  API-->>App: Command response
+  App->>API: POST /xapi/status (refresh)
+  API-->>App: Updated status
+  App-->>User: Updated UI
 ```
 
 1. User opens the hosted app and signs in with Webex.
