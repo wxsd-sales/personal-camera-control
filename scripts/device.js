@@ -132,6 +132,7 @@ class Device {
   #selfviewMode;
   #selfviewPIPPosition;
   #selfviewFullscreenMode;
+  #byodLimitedActive;
 
   /**
    * @param {Webex} webex
@@ -173,6 +174,10 @@ class Device {
 
   get selfviewFullscreenMode() {
     return this.#selfviewFullscreenMode;
+  }
+
+  get byodLimitedActive() {
+    return this.#byodLimitedActive;
   }
 
   get selectedCamera() {
@@ -227,6 +232,7 @@ class Device {
       "Cameras.*",
       "Video.Input.MainVideoSource",
       "Video.Selfview.*",
+      "SystemUnit.ByodLimited.Active"
     ]);
     const rawSource = response?.result?.Video?.Input?.MainVideoSource;
 
@@ -240,6 +246,7 @@ class Device {
     this.#selfviewMode = response?.result?.Video?.Selfview?.Mode;
     this.#selfviewPIPPosition = response?.result?.Video?.Selfview?.PIPPosition;
     this.#selfviewFullscreenMode = response?.result?.Video?.Selfview?.FullscreenMode;
+    this.#byodLimitedActive = response?.result?.SystemUnit?.ByodLimited?.Active;
     return {
       cameras: this.getCameras(),
       mainVideoSource: this.#mainVideoSource,
@@ -247,7 +254,18 @@ class Device {
       selfviewMode: this.#selfviewMode,
       selfviewPIPPosition: this.#selfviewPIPPosition,
       selfviewFullscreenMode: this.#selfviewFullscreenMode,
+      byodLimitedActive: this.#byodLimitedActive,
     };
+  }
+
+  /**
+   * Read BYOD-limited mode for device picker labeling.
+   */
+  async syncByodLimitedStatus() {
+    const response = await this.xapiStatus("SystemUnit.ByodLimited.Active");
+
+    this.#byodLimitedActive = response?.result?.SystemUnit?.ByodLimited?.Active;
+    return this.#byodLimitedActive;
   }
 
   /**

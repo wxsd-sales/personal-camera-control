@@ -27,6 +27,7 @@ const MOCK_DEVICE = {
   product: "Room Bar",
   connectionStatus: "connected",
   permissions: ["xapi"],
+  byodLimitedActive: "True",
 };
 
 const MOCK_CAMERAS = [

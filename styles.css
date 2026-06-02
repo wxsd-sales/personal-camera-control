@@ -466,12 +466,27 @@ h2 {
   color: var(--app-text-secondary);
 }
 
+.device-select__status {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: 8px;
+}
+
 .device-status {
   flex-shrink: 0;
   width: 10px;
   height: 10px;
   border: 1px solid transparent;
   border-radius: 50%;
+}
+
+.device-status__label {
+  color: var(--app-text-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
 }
 
 .device-status.online {

@@ -254,7 +254,7 @@ async function loadPersonalDevices() {
     const query = { capability: "xapi", type: "roomdesk"};
 
     const devices = await app.webex.listDevices(query);
-    app.personalDevices = devices.filter(hasXapiPermission);
+    app.personalDevices = devices.filter(isPersonalModeDevice);
 
     if (!app.personalDevices.length) {
       setState({ devices: "unavailable" });
@@ -266,6 +266,13 @@ async function loadPersonalDevices() {
       render();
       return;
     }
+
+    if (app.dom.loadingMessage) {
+      app.dom.loadingMessage.textContent =
+        "Reading device status to prepare the device list.";
+    }
+
+    await syncPersonalDeviceStatuses(app.personalDevices);
 
     addLog(
       `Found ${app.personalDevices.length} personal device${app.personalDevices.length === 1 ? "" : "s"}: ${app.personalDevices.map(getDeviceDisplayName).join(", ")}.`,
@@ -297,9 +304,29 @@ async function loadPersonalDevices() {
   render();
 }
 
-function hasXapiPermission(device) {
-  const permissions = device?.permissions || [];
-  return permissions.includes("xapi");
+function isPersonalModeDevice(device) {
+  return device.hasOwnProperty("personId");
+}
+
+async function syncPersonalDeviceStatuses(devices = []) {
+  if (!app.webex || !devices.length) {
+    return;
+  }
+
+  await Promise.all(
+    devices.map(async (device) => {
+      try {
+        const handle = new Device(app.webex, device.id);
+        device.byodLimitedActive = await handle.syncByodLimitedStatus();
+      } catch {
+        device.byodLimitedActive = undefined;
+      }
+    }),
+  );
+}
+
+function isByodLimitedActive(device = {}) {
+  return normalizeStatusToken(device.byodLimitedActive) === "true";
 }
 
 function isRoomBarDevice(device) {
@@ -375,6 +402,7 @@ async function refreshCameraState(options = {}) {
 
   try {
     await app.device.syncDeviceStatus();
+    syncSelectedDeviceByodStatus();
 
     app.availableCameras = app.device.getCameras();
 
@@ -661,12 +689,28 @@ function populateDeviceSelectRow(container, device, { placeholder = "" } = {}) {
   label.textContent = getDeviceDisplayName(device);
 
   const online = isDeviceOnline(device);
-  const status = document.createElement("span");
 
-  status.className = `device-status ${online ? "online" : "offline"}`;
-  status.setAttribute("aria-label", online ? "Online" : "Offline");
+  container.append(thumb, label, createDeviceStatusIndicator(online));
+}
 
-  container.append(thumb, label, status);
+function createDeviceStatusIndicator(online) {
+  const wrapper = document.createElement("span");
+
+  wrapper.className = "device-select__status";
+  wrapper.setAttribute("aria-label", online ? "Online" : "Offline");
+
+  const dot = document.createElement("span");
+
+  dot.className = `device-status ${online ? "online" : "offline"}`;
+  dot.setAttribute("aria-hidden", "true");
+
+  const label = document.createElement("span");
+
+  label.className = "device-status__label";
+  label.textContent = online ? "Online" : "Offline";
+
+  wrapper.append(dot, label);
+  return wrapper;
 }
 
 function renderDevicePicker() {
@@ -1385,15 +1429,32 @@ function addLog(message, level = "info") {
   console[method](message);
 }
 
-function getDeviceDisplayName(device = {}) {
-  return (
-    device.displayName ||
-    device.product ||
-    device.metadata?.userAssignedName ||
-    device.identity?.displayName ||
-    device.productName ||
-    "Webex device"
+function syncSelectedDeviceByodStatus() {
+  if (!app.device || !app.selectedDeviceId) {
+    return;
+  }
+
+  const deviceRecord = app.personalDevices.find(
+    (entry) => entry.id === app.selectedDeviceId,
   );
+
+  if (deviceRecord) {
+    deviceRecord.byodLimitedActive = app.device.byodLimitedActive;
+  }
+}
+
+function getDeviceDisplayName(device = {}) {
+  const baseName =
+    String(device.product || "").trim() ||
+    String(device.displayName || "").trim() ||
+    String(device.identity?.displayName || "").trim() ||
+    "Unknown device";
+
+  if (isRoomBarDevice(device) && isByodLimitedActive(device)) {
+    return /\sbyod$/i.test(baseName) ? baseName : `${baseName} BYOD`;
+  }
+
+  return baseName;
 }
 
 function getSelectedDeviceName() {
