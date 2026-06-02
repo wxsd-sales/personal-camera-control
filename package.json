@@ -1,0 +1,10 @@
+{
+  "name": "personal-camera-control",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev:proxy": "node scripts/dev-proxy.mjs",
+    "serve:web": "node scripts/serve-web.mjs",
+    "screenshot:web": "node scripts/screenshot-web.mjs"
+  }
+}

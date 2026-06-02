@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      (function initMomentumTheme() {
+        const getHashTheme = () => {
+          const raw = window.location.hash.startsWith("#")
+            ? window.location.hash.slice(1)
+            : window.location.hash;
+
+          if (!raw) {
+            return null;
+          }
+
+          const theme = new URLSearchParams(raw).get("theme");
+          return theme === "light" || theme === "dark" ? theme : null;
+        };
+
+        const apply = () => {
+          const forcedTheme = getHashTheme();
+          const dark = forcedTheme
+            ? forcedTheme === "dark"
+            : window.matchMedia("(prefers-color-scheme: dark)").matches;
+          const root = document.documentElement;
+
+          root.classList.remove(
+            "mds-theme-stable-lightWebex",
+            "mds-theme-stable-darkWebex",
+          );
+          root.classList.add(
+            dark
+              ? "mds-theme-stable-darkWebex"
+              : "mds-theme-stable-lightWebex",
+          );
+          root.style.colorScheme = dark ? "dark" : "light";
+        };
+
+        apply();
+        window
+          .matchMedia("(prefers-color-scheme: dark)")
+          .addEventListener("change", () => {
+            if (!getHashTheme()) {
+              apply();
+            }
+          });
+      })();
+    </script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@momentum-design/icons@0.54.0/dist/data/MomentumFontIcons.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@momentum-design/tokens@0.10.4/dist/css/theme/webex/light-stable.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@momentum-design/tokens@0.10.4/dist/css/theme/webex/dark-stable.css"
+    />
+    <link
+      rel="preload"
+      href="https://cdn.jsdelivr.net/npm/@momentum-design/illustrations@0.3.0/dist/svg/people-headshot-wavy-hair-l-oneninetwo-default.svg"
+      as="image"
+      type="image/svg+xml"
+    />
+    <meta
+      name="momentum-illustrations-cdn"
+      content="https://cdn.jsdelivr.net/npm/@momentum-design/illustrations@0.3.0/dist/svg"
+    />
+    <title>Personal Camera Control</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link
+      rel="icon"
+      type="image/png"
+      href="image/favicon-96x96.png"
+      sizes="96x96"
+    />
+    <link rel="icon" type="image/svg+xml" href="image/favicon.svg" />
+    <link rel="shortcut icon" href="image/favicon.ico" />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="image/apple-touch-icon.png"
+    />
+    <link rel="manifest" href="image/site.webmanifest" />
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="app-header__brand">
+        <img src="image/favicon-96x96.png" alt="Web App Logo" class="app-header__logo" aria-hidden="true">
+        <span class="app-header__product">Personal Camera Control</span>
+      </div>
+      <div class="app-header__actions">
+        <button id="signOutBtn" type="button" class="secondary-button" hidden>
+          Sign out
+        </button>
+      </div>
+    </header>
+
+    <main class="app-main" aria-labelledby="pageTitle">
+      <div class="app-content">
+        <div class="page-stack" aria-live="polite">
+          <section class="step-card" data-step="signin">
+            <h2>Sign in with Webex</h2>
+            <p>
+              Sign in with your Webex account to find your personal collaboration
+              devices and control their cameras from this browser.
+            </p>
+            <div class="step-actions">
+    
+
+              <button
+              id="signInBtn"
+              type="button"
+              class="icon-button icon-button--with-label secondary-button"
+              disabled
+            >
+              <span class="icon icon-webex-helix-regular" aria-hidden="true"></span>
+              <span class="icon-button__label">Sign in with Webex</span>
+            </button>
+            </div>
+          </section>
+
+          <section class="step-card" data-step="webexLoading" hidden>
+            <h2>Loading your devices</h2>
+            <p id="loadingMessage">
+              Finding personal devices linked to your Webex account that support
+              cloud camera control.
+            </p>
+            <div class="loader" aria-hidden="true"></div>
+          </section>
+
+          <section class="step-card" data-step="noDevices" hidden>
+            <h2>No controllable devices found</h2>
+            <p id="noDevicesMessage">
+              This account does not have any personal devices with cloud xAPI
+              access. Activate a device in personal mode or check your Webex
+              permissions, then refresh this page.
+            </p>
+            <div class="step-actions">
+     
+              <button
+              id="retryDevicesBtn"
+              type="button"
+              class="icon-button icon-button--with-label secondary-button"
+            >
+              <span class="icon icon-refresh-regular" aria-hidden="true"></span>
+              <span class="icon-button__label">Try again</span>
+            </button>
+            </div>
+          </section>
+
+          <section class="step-card control-step" data-step="control" hidden>
+          
+
+            <section class="control-section device-section" aria-label="Devices">
+              <h3>Devices</h3>
+              <button
+                id="refreshCamerasBtn"
+                type="button"
+                class="icon-button icon-button--with-label secondary-button"
+                disabled
+              >
+                <span class="icon icon-refresh-regular" aria-hidden="true"></span>
+                <span class="icon-button__label">Refresh</span>
+              </button>
+              <div class="device-picker">
+                <div class="device-select" id="deviceSelectRoot">
+                  <button
+                    type="button"
+                    class="device-select__trigger"
+                    id="deviceSelectTrigger"
+                    aria-haspopup="listbox"
+                    aria-expanded="false"
+                    aria-controls="deviceSelectList"
+                    disabled
+                  >
+                    <span class="device-select__placeholder"
+                      >Loading devices…</span
+                    >
+                  </button>
+                  <ul
+                    class="device-select__options"
+                    id="deviceSelectList"
+                    role="listbox"
+                    hidden
+                  ></ul>
+                </div>
+                <small id="deviceSelectDetail"
+                  >Select a personal device to control.</small
+                >
+              </div>
+            </section>
+
+            
+
+            <section class="control-section" aria-label="Available cameras">
+              <h3>Available Cameras</h3>
+              <ul id="cameraInventory" class="camera-list">
+                <li class="camera-empty">No camera status received yet.</li>
+              </ul>
+            </section>
+
+            <section class="control-section" aria-label="Saved camera presets">
+              <h3>Saved Presets</h3>
+              <div id="presetControls" class="control-grid">
+                <p class="control-empty">No saved presets received yet.</p>
+              </div>
+            </section>
+
+            <section class="control-section" aria-label="Camera modes">
+              <h3>Modes</h3>
+              <div id="cameraModeControls" class="control-grid">
+                <p class="control-empty">No camera modes received yet.</p>
+              </div>
+            </section>
+
+            <div
+              id="cameraControlPanels"
+              class="camera-control-panels"
+              hidden
+            >
+              <section
+                id="manualCameraControls"
+                class="control-section manual-control-section"
+                aria-label="Manual camera controls"
+              >
+                <h3>Manual Controls</h3>
+                <div class="manual-control-surface">
+                  <div class="manual-control-row">
+                    <div class="direction-pad" aria-label="Pan and tilt">
+                    <button
+                      type="button"
+                      class="pad-button pad-up"
+                      aria-label="Tilt up"
+                      data-ramp-axis="Tilt"
+                      data-ramp-direction="Down"
+                    >
+                      <span
+                        class="icon icon-arrow-up-bold"
+                        aria-hidden="true"
+                      ></span>
+                    </button>
+                    <button
+                      type="button"
+                      class="pad-button pad-left"
+                      aria-label="Pan left"
+                      data-ramp-axis="Pan"
+                      data-ramp-direction="Left"
+                    >
+                      <span
+                        class="icon icon-arrow-left-bold"
+                        aria-hidden="true"
+                      ></span>
+                    </button>
+                    <span class="pad-center" aria-hidden="true"></span>
+                    <button
+                      type="button"
+                      class="pad-button pad-right"
+                      aria-label="Pan right"
+                      data-ramp-axis="Pan"
+                      data-ramp-direction="Right"
+                    >
+                      <span
+                        class="icon icon-arrow-right-bold"
+                        aria-hidden="true"
+                      ></span>
+                    </button>
+                    <button
+                      type="button"
+                      class="pad-button pad-down"
+                      aria-label="Tilt down"
+                      data-ramp-axis="Tilt"
+                      data-ramp-direction="Up"
+                    >
+                      <span
+                        class="icon icon-arrow-down-bold"
+                        aria-hidden="true"
+                      ></span>
+                    </button>
+                  </div>
+
+                  <div class="zoom-control" aria-label="Zoom">
+                    <button
+                      type="button"
+                      aria-label="Zoom in"
+                      data-ramp-axis="Zoom"
+                      data-ramp-direction="In"
+                    >
+                      +
+                    </button>
+                    <button
+                      type="button"
+                      aria-label="Zoom out"
+                      data-ramp-axis="Zoom"
+                      data-ramp-direction="Out"
+                    >
+                      −
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  id="saveCameraViewBtn"
+                  type="button"
+                  class="save-camera-button"
+                >
+                  Save camera view
+                </button>
+                <div
+                  id="savePresetControls"
+                  class="save-preset-grid"
+                  hidden
+                ></div>
+              </div>
+              </section>
+
+              <section
+                class="control-section selfview-control-section"
+                aria-label="Selfview controls"
+              >
+                <h3>Selfview Controls</h3>
+                <div class="selfview-control-surface">
+                  <div class="selfview-pip-section" id="selfviewPIPSection">
+                    <div
+                      id="selfviewPIPPosition"
+                      class="selfview-pip-grid"
+                      role="group"
+                      aria-label="Selfview PIP position"
+                    >
+                      <button
+                        type="button"
+                        data-pip-position="UpperLeft"
+                        aria-label="Upper left"
+                      ></button>
+                      <button
+                        type="button"
+                        data-pip-position="UpperCenter"
+                        aria-label="Upper center"
+                      ></button>
+                      <button
+                        type="button"
+                        data-pip-position="UpperRight"
+                        aria-label="Upper right"
+                      ></button>
+                      <button
+                        type="button"
+                        data-pip-position="CenterLeft"
+                        aria-label="Center left"
+                      ></button>
+                      <span class="selfview-pip-empty" aria-hidden="true"></span>
+                      <button
+                        type="button"
+                        data-pip-position="CenterRight"
+                        aria-label="Center right"
+                      ></button>
+                      <button
+                        type="button"
+                        data-pip-position="LowerLeft"
+                        aria-label="Lower left"
+                      ></button>
+                      <span class="selfview-pip-empty" aria-hidden="true"></span>
+                      <button
+                        type="button"
+                        data-pip-position="LowerRight"
+                        aria-label="Lower right"
+                      ></button>
+                    </div>
+                    <div
+                      id="selfviewFullscreenPreview"
+                      class="selfview-fullscreen-preview"
+                      hidden
+                      aria-label="Selfview fullscreen preview"
+                    ></div>
+                    <p
+                      id="selfviewPIPUnavailable"
+                      class="control-empty selfview-pip-unavailable"
+                      hidden
+                    >
+                      Selfview status unavailable.
+                    </p>
+                  </div>
+                  <div class="selfview-action-buttons">
+                    <button
+                      id="toggleSelfviewBtn"
+                      type="button"
+                      class="save-camera-button selfview-action-button"
+                    >
+                      Toggle selfview
+                    </button>
+                    <button
+                      id="toggleSelfviewFullscreenBtn"
+                      type="button"
+                      class="save-camera-button selfview-action-button"
+                    >
+                      Toggle fullscreen
+                    </button>
+                  </div>
+                </div>
+              </section>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <script type="module" src="scripts/main.js"></script>
+  </body>
+</html>
