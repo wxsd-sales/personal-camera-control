@@ -251,7 +251,7 @@ async function loadPersonalDevices() {
   try {
 
 
-    const query = { capability: "xapi" };
+    const query = { capability: "xapi", type: "roomdesk"};
 
     const devices = await app.webex.listDevices(query);
     app.personalDevices = devices.filter(hasXapiPermission);

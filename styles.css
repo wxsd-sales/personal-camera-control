@@ -29,6 +29,15 @@ html.mds-theme-stable-darkWebex {
   --app-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 8px 24px rgba(0, 0, 0, 0.06);
 }
 
+html.mds-theme-stable-lightWebex {
+  /* Momentum headshot SVG uses white strokes; invert to black on light surfaces. */
+  --selfview-headshot-filter: brightness(0);
+}
+
+html.mds-theme-stable-darkWebex {
+  --selfview-headshot-filter: none;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -662,11 +671,18 @@ h2 {
   display: none;
 }
 
+.selfview-pip-headshot,
 .selfview-fullscreen-headshot {
   display: block;
-  height: 100%;
-  object-fit: cover;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  filter: var(--selfview-headshot-filter, none);
   pointer-events: none;
+}
+
+.selfview-pip-headshot {
+  border-radius: 2px;
 }
 
 .control-sublabel {
@@ -714,13 +730,6 @@ h2 {
   padding: 2px;
 }
 
-.selfview-pip-headshot {
-  display: block;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 2px;
-  pointer-events: none;
-}
 
 .selfview-pip-grid button:disabled {
   cursor: not-allowed;
