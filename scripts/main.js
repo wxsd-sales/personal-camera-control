@@ -1,7 +1,10 @@
 import Device from "./device.js";
 import Webex from "./webex.js";
 import OAuth, { isHostedWebApp } from "./oauth.js";
-import { isLocalDevProxyEnabled, resolveWebexApiBaseUrl } from "./webex-config.js";
+import {
+  isLocalDevProxyEnabled,
+  resolveWebexApiBaseUrl,
+} from "./webex-config.js";
 import {
   applyScreenshotMock,
   parseScreenshotViewFromHash,
@@ -32,8 +35,6 @@ const app = {
     devices: "idle",
   },
 };
-
-
 
 window.addEventListener("DOMContentLoaded", initializeApp);
 
@@ -117,7 +118,9 @@ function collectDom() {
 function bindUiEvents() {
   app.dom.signInBtn?.addEventListener("click", startWebexLogin);
   app.dom.signOutBtn?.addEventListener("click", signOutOfWebex);
-  app.dom.retryDevicesBtn?.addEventListener("click", () => loadPersonalDevices());
+  app.dom.retryDevicesBtn?.addEventListener("click", () =>
+    loadPersonalDevices(),
+  );
   bindDeviceSelectEvents();
   app.dom.refreshCamerasBtn?.addEventListener("click", () =>
     refreshCameraState({ presets: true }),
@@ -163,7 +166,14 @@ function initializeAuth() {
 
   if (!auth.ok) {
     setState({ webex: "needed" });
-    addLog(auth.message || "Sign in with Webex to find your personal devices.", auth.reason === "expired" || auth.reason === "oauth_error" || auth.reason === "state_mismatch" ? "error" : "info");
+    addLog(
+      auth.message || "Sign in with Webex to find your personal devices.",
+      auth.reason === "expired" ||
+        auth.reason === "oauth_error" ||
+        auth.reason === "state_mismatch"
+        ? "error"
+        : "info",
+    );
     return;
   }
 
@@ -172,7 +182,8 @@ function initializeAuth() {
 }
 
 function startWebexLogin() {
-  const deviceId = oauth.getHashDeviceId() || app.selectedDeviceId || app.pendingDeviceId;
+  const deviceId =
+    oauth.getHashDeviceId() || app.selectedDeviceId || app.pendingDeviceId;
   const errorMessage = oauth.startLogin({ deviceId });
 
   if (errorMessage) {
@@ -250,9 +261,7 @@ async function loadPersonalDevices() {
   }
 
   try {
-
-
-    const query = { capability: "xapi", type: "roomdesk"};
+    const query = { capability: "xapi", type: "roomdesk" };
 
     const devices = await app.webex.listDevices(query);
     app.personalDevices = devices.filter(isPersonalModeDevice);
@@ -294,9 +303,11 @@ async function loadPersonalDevices() {
     await selectDevice(initialDeviceId, { silent: true });
     app.pendingDeviceId = null;
     setState({ devices: "ready" });
-    addLog(`Controlling ${getDeviceDisplayName(
-      app.personalDevices.find((entry) => entry.id === initialDeviceId),
-    )}.`);
+    addLog(
+      `Controlling ${getDeviceDisplayName(
+        app.personalDevices.find((entry) => entry.id === initialDeviceId),
+      )}.`,
+    );
   } catch (error) {
     setState({ devices: "error" });
     addLog(`Failed to load personal devices: ${formatError(error)}`, "error");
@@ -336,7 +347,7 @@ function isRoomBarDevice(device) {
   const product = String(device?.product || "").trim();
   const displayName = String(device?.displayName || "").trim();
 
-  if (product.includes( "Room Bar" )){
+  if (product.includes("Room Bar")) {
     return true;
   }
 
@@ -371,7 +382,9 @@ function resolveInitialDeviceId(devices = [], preferredDeviceId = null) {
 }
 
 async function selectDevice(deviceId, options = {}) {
-  const deviceRecord = app.personalDevices.find((entry) => entry.id === deviceId);
+  const deviceRecord = app.personalDevices.find(
+    (entry) => entry.id === deviceId,
+  );
 
   if (!deviceRecord) {
     addLog("Selected device is not available for this account.", "error");
@@ -393,8 +406,7 @@ async function selectDevice(deviceId, options = {}) {
 }
 
 async function refreshCameraState(options = {}) {
-
-  console.log('Refreshing Camera Status')
+  console.log("Refreshing Camera Status");
   if (!app.device) {
     return;
   }
@@ -528,9 +540,9 @@ function formatCameraList(cameras = []) {
 function canControlCamera() {
   return Boolean(
     app.device &&
-      app.selectedDeviceId &&
-      app.state.webex === "ready" &&
-      app.state.devices === "ready",
+    app.selectedDeviceId &&
+    app.state.webex === "ready" &&
+    app.state.devices === "ready",
   );
 }
 
@@ -870,7 +882,13 @@ function renderCameraModeControls() {
     return;
   }
 
-  const modes = app.cameraModes;
+  const byodLimitedModes = ["Manual", "Dynamic"];
+
+  const modes = isByodLimitedActive(app?.device)
+    ? app.cameraModes.filter(({ behavior }) =>
+        byodLimitedModes.includes(behavior),
+      )
+    : app.cameraModes;
 
   if (!modes.length) {
     reconcileChildren(
@@ -1457,9 +1475,7 @@ function syncSelectedDeviceByodStatus() {
 }
 
 function getDeviceDisplayName(device = {}) {
-  const baseName =
-    String(device.displayName || "").trim() ||
-    "Unknown device";
+  const baseName = String(device.displayName || "").trim() || "Unknown device";
 
   if (isRoomBarDevice(device) && isByodLimitedActive(device)) {
     return /\sbyod$/i.test(baseName) ? baseName : `${baseName} BYOD`;
@@ -1477,9 +1493,7 @@ function getSelectedDeviceName() {
 }
 
 function formatError(error) {
-  const parts = [
-    error?.message || error?.body?.message || String(error),
-  ];
+  const parts = [error?.message || error?.body?.message || String(error)];
 
   if (error?.trackingId) {
     parts.push(`(tracking: ${error.trackingId})`);

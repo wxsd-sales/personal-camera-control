@@ -59,6 +59,7 @@ const MOCK_CAMERAS = [
 
 const MOCK_CAMERA_MODES = [
   { id: "Manual", behavior: "Manual", label: "Manual" },
+  { id: "Dynamic", behavior: "Dynamic", label: "Dynamic" },
   { id: "BestOverview", behavior: "BestOverview", label: "Best Overview" },
   { id: "Closeup", behavior: "Closeup", label: "Closeup" },
   { id: "PresenterTrack", behavior: "PresenterTrack", label: "Presenter Track" },
