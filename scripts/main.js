@@ -326,6 +326,7 @@ async function syncPersonalDeviceStatuses(devices = []) {
 }
 
 function isByodLimitedActive(device = {}) {
+  console.log("device.byodLimitedActive", device.byodLimitedActive);
   return normalizeStatusToken(device.byodLimitedActive) === "true";
 }
 
@@ -333,7 +334,7 @@ function isRoomBarDevice(device) {
   const product = String(device?.product || "").trim();
   const displayName = String(device?.displayName || "").trim();
 
-  if (product === "Room Bar") {
+  if (product.includes( "Room Bar" )){
     return true;
   }
 

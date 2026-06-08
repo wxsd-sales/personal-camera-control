@@ -23,8 +23,8 @@ export function parseScreenshotViewFromHash() {
 
 const MOCK_DEVICE = {
   id: "mock-device-room-bar-001",
-  displayName: "Cisco Room Bar",
-  product: "Room Bar",
+  displayName: "John Smith Room Bar",
+  product: "Cisco Room Bar",
   connectionStatus: "connected",
   permissions: ["xapi"],
   byodLimitedActive: "True",
