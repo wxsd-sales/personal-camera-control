@@ -329,7 +329,7 @@ async function syncPersonalDeviceStatuses(devices = []) {
 function isByodLimitedActive(device = {}) {
   console.log("device.byodLimitedActive", device?.byodLimitedActive);
 
-  return normalizeStatusToken(device.byodLimitedActive) == "true";
+  return normalizeStatusToken(device?.byodLimitedActive) == "true";
 }
 
 function isRoomBarDevice(device) {
