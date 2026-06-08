@@ -1445,9 +1445,7 @@ function syncSelectedDeviceByodStatus() {
 
 function getDeviceDisplayName(device = {}) {
   const baseName =
-    String(device.product || "").trim() ||
     String(device.displayName || "").trim() ||
-    String(device.identity?.displayName || "").trim() ||
     "Unknown device";
 
   if (isRoomBarDevice(device) && isByodLimitedActive(device)) {
