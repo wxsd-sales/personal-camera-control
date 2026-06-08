@@ -95,6 +95,7 @@ function createMockDeviceHandle() {
 
   return {
     mainVideoSource: 1,
+    byodLimitedActive: MOCK_DEVICE.byodLimitedActive,
     get selfviewMode() {
       return selfviewMode;
     },

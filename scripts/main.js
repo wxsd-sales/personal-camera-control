@@ -97,6 +97,7 @@ function collectDom() {
     presetControls: document.querySelector("#presetControls"),
     manualCameraControls: document.querySelector("#manualCameraControls"),
     cameraControlPanels: document.querySelector("#cameraControlPanels"),
+    selfviewControlSection: document.querySelector(".selfview-control-section"),
     selfviewPIPSection: document.querySelector("#selfviewPIPSection"),
     selfviewPIPPosition: document.querySelector("#selfviewPIPPosition"),
     selfviewFullscreenPreview: document.querySelector(
@@ -326,8 +327,9 @@ async function syncPersonalDeviceStatuses(devices = []) {
 }
 
 function isByodLimitedActive(device = {}) {
-  console.log("device.byodLimitedActive", device.byodLimitedActive);
-  return normalizeStatusToken(device.byodLimitedActive) === "true";
+  console.log("device.byodLimitedActive", device?.byodLimitedActive);
+
+  return normalizeStatusToken(device.byodLimitedActive) == "true";
 }
 
 function isRoomBarDevice(device) {
@@ -926,6 +928,16 @@ function renderManualCameraControls() {
 }
 
 function renderSelfviewControls() {
+  const selfviewAvailable = !isByodLimitedActive(app?.device);
+
+  if (app.dom.selfviewControlSection) {
+    app.dom.selfviewControlSection.hidden = !selfviewAvailable;
+  }
+
+  if (!selfviewAvailable) {
+    return;
+  }
+
   const canControl = canControlCamera() && isManualCameraModeActive();
   const activePosition = app.device?.selfviewPIPPosition ?? "";
   const isFullscreen = app.device?.selfviewFullscreenMode === "On";
