@@ -882,7 +882,7 @@ function renderCameraModeControls() {
     return;
   }
 
-  const byodLimitedModes = ["Manual", "Dynamic"];
+  const byodLimitedModes = ["Manual", "BestOverview"];
 
   const modes = isByodLimitedActive(app?.device)
     ? app.cameraModes.filter(({ behavior }) =>
